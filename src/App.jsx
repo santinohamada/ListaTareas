@@ -1,12 +1,16 @@
-import { useState } from 'react'
+import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css'
+import FormularioTarea from './components/FormularioTarea';
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <>
-     <h1>Hola mundo</h1>
+     <main className='container my-5'>
+    <h1 className='text-light'>Bienvenido</h1>
+    <h2 className='text-light'>Ingresa tus tareas</h2>
+    <FormularioTarea></FormularioTarea>
+     </main>
     </>
   )
 }
