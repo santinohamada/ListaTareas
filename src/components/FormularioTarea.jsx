@@ -1,61 +1,74 @@
-import { Form, Button } from "react-bootstrap";
 import ListaTareas from "./ListaTareas";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import {
+  listarTareas,
+  agregarTarea,
+  borrarTareaFront,
+  editarTareaFront
+} from "../helper/queries";
+import { useCallback, useEffect, useState } from "react";
+import TareaForm from "./TareaForm";
 const FormularioTarea = () => {
   const [tarea, setTarea] = useState("");
-  const tareasLocalstorage = JSON.parse(localStorage.getItem('tareas')) || [];
-  const [listaTareas, setListaTareas] = useState(tareasLocalstorage);
+  const [listaTareas, setListaTareas] = useState([]);
+  const [editarTareas, setEditarTarea] = useState(false);
+  const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
 
+  const NuevaTarea = async (data) => {
+    const tarea = await agregarTarea(data);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm();
-useEffect(()=>
-  localStorage.setItem("tareas",JSON.stringify(listaTareas))
-  ,[listaTareas])
-  const onSubmit = (data) => {
-    console.log(data)
-    setListaTareas([...listaTareas, data.tarea]);
-    reset();
+    const dato = await tarea.json();
+    setListaTareas([...listaTareas, dato]);
   };
 
-  const borrarTarea = (nombreTarea) => {
-    const tareasFiltradas = listaTareas.filter((item) => item !== nombreTarea);
-    setListaTareas(tareasFiltradas);
+  useEffect(() => {
+    const obtenerTareas = async () => {
+      const tareas = await listarTareas();
+      const datos = await tareas.json();
+      setListaTareas(datos);
+    };
+    obtenerTareas();
+  }, []);
+  const onSubmit = async (data) => {
+    
+    if (tareaSeleccionada !== null) {
+      const nuevaLista = listaTareas.map((tarea) => {
+        if (tarea._id == tareaSeleccionada._id) {
+          tarea.tarea = data.tarea;
+        }
+        return tarea
+      });
+      
+      setListaTareas(nuevaLista)
+      await editarTareaFront(tareaSeleccionada._id,data)
+  
+    } else {
+      NuevaTarea(data);
+    }
+    
   };
+
+  const borrarTarea = useCallback(
+    async (tarea) => {
+      await borrarTareaFront(tarea);
+      const tareasFiltradas = listaTareas.filter(
+        (item) => item.tarea !== tarea.tarea
+      );
+      setListaTareas(tareasFiltradas);
+    },
+    [listaTareas]
+  );
+
+
   return (
     <section>
-      <Form onSubmit={handleSubmit(onSubmit)}>
-        <Form.Group className="mb-3 d-flex">
-          <Form.Control
-            {...register("tarea", {
-              required: "La tarea es un dato obligatorio",
-              minLength:{
-                value:3,
-                message:"La tarea debe contener como minimo 3 caracteres"
-              },
-              maxLength:{
-                value:20,
-                message:"La tarea debe contener como maximo 20 caracteres"
-              }
-            })}
-            type="text"
-            placeholder="agrega una tarea"
-
-          />
-          <Button variant="secondary" type="submit">
-            Enviar
-          </Button>
-        </Form.Group>
-          <Form.Text className="text-danger">
-            {errors.tarea?.message}
-          </Form.Text>
-      </Form>
+      <TareaForm
+        onSubmit={onSubmit}
+        tareaSeleccionada={tareaSeleccionada}
+        setTareaSeleccionada={setTareaSeleccionada}
+      ></TareaForm>
       <ListaTareas
+        setEditarTarea={setEditarTarea}
+        setTareaSeleccionada={setTareaSeleccionada}
         listaTareas={listaTareas}
         borrarTarea={borrarTarea}
       ></ListaTareas>
