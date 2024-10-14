@@ -1,5 +1,6 @@
 const URLTareas = import.meta.env.VITE_API_TAREAS
 export const listarTareas = async ()=>{
+    console.log(URLTareas)
     const tareas = await fetch(URLTareas)
     
     return tareas
